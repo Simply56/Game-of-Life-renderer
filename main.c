@@ -1,4 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
+#include <getopt.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -7,9 +9,6 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-
-const size_t WIDTH = 400;
-const size_t HEIGHT = 400;
 
 // Rust functions
 void init_window(size_t width, size_t height);
@@ -58,49 +57,73 @@ uint32_t decode_state(uint8_t state)
     }
 }
 
-void dense_non_sparse(uint32_t *pixels)
+void dense_non_sparse(uint32_t *pixels, size_t width, size_t height)
 {
     // one byte per cell, all cells included
-    uint8_t buffer[WIDTH];
+    uint8_t buffer[width];
 
     while (true) {
-        for (size_t i = 0; i < HEIGHT; i++) {
+        for (size_t i = 0; i < height; i++) {
             ssize_t total_read = 0;
             while (total_read < sizeof(buffer)) {
-                ssize_t just_read = read(STDIN_FILENO, buffer + total_read, WIDTH - total_read);
+                ssize_t just_read = read(STDIN_FILENO, buffer + total_read, width - total_read);
                 if (just_read <= 0) {
                     exit(1);
                 }
                 total_read += just_read;
             }
 
-            for (size_t j = 0; j < WIDTH; j++) {
-                pixels[i * WIDTH + j] = decode_state(buffer[j]);
+            for (size_t j = 0; j < width; j++) {
+                pixels[i * width + j] = decode_state(buffer[j]);
             }
         }
 
-        render_frame(pixels, WIDTH, HEIGHT);
+        render_frame(pixels, width, height);
         print_fps();
     }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-    uint32_t *pixels = malloc(WIDTH * HEIGHT * sizeof(uint32_t));
+    uint32_t width = 400;
+    uint32_t height = 400;
+
+    char *endptr;
+    int option;
+    while ((option = getopt(argc, argv, "w:h:")) != -1) {
+        if (option == '?' || option == ':') {
+            // getopt prints error text
+            return EXIT_FAILURE;
+        }
+
+        switch (option) {
+        case 'w':
+            width = (uint32_t) strtoumax(optarg, &endptr, 10);
+            break;
+        case 'h':
+            height = (uint32_t) strtoumax(optarg, &endptr, 10);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    uint32_t *pixels = malloc(width * height * sizeof(uint32_t));
     if (!pixels) {
         fprintf(stderr, "Memory allocation failed\n");
         return 1;
     }
-    init_window(WIDTH, HEIGHT);
+    init_window(width, height);
 
-    dense_non_sparse(pixels);
+    dense_non_sparse(pixels, width, height);
 
     for (int i = 0; i < 3000; ++i) {
-        if (read(STDIN_FILENO, pixels, WIDTH * HEIGHT * 4) != WIDTH * HEIGHT * 4) {
+        if (read(STDIN_FILENO, pixels, width * height * 4) != width * height * 4) {
             fprintf(stderr, "short read\n");
             goto err;
         }
-        render_frame(pixels, WIDTH, HEIGHT);
+        render_frame(pixels, width, height);
         print_fps();
     }
 
