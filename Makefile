@@ -6,8 +6,8 @@ C_SOURCE = main.c
 C_BINARY = main
 
 # Compiler and flags
-CC = clang
-CFLAGS = -Wall -Wextra -O0 -g
+CC = gcc
+CFLAGS = -Wall -Wextra -O3
 LDFLAGS = -L$(CARGO_TARGET_DIR) -lminifb_adapter -ldl -lpthread -Wl,-rpath,$(CURDIR)/$(CARGO_TARGET_DIR)
 
 # Default target
