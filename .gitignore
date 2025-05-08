@@ -1,0 +1,13 @@
+# Ignore everything
+*
+
+# Except these files and directories
+!.gitignore
+!Readme.md
+!main.c
+!Makefile
+!minifb_adapter/
+!minifb_adapter/src
+!minifb_adapter/src/*
+!minifb_adapter/Cargo.toml
+!minifb_adapter/Cargo.lock
