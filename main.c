@@ -51,20 +51,24 @@ ssize_t read_buff(uint8_t *buffer, size_t size)
 
 uint32_t decode_state(uint8_t state)
 {
-    const uint8_t blue = 1;
-    const uint8_t orange = 2;
-    const uint8_t dead = 3;
+    enum state
+    {
+        EMPTY = 0,
+        BLUE = 1,
+        ORANGE = 2,
+        DEAD = 3,
+    };
 
     switch (state) {
-    case blue:
+    case BLUE:
         return 0x0099FF;
-    case orange:
+    case ORANGE:
         return 0xFF9900;
-    case dead:
+    case DEAD:
         return 0x6666666;
-    case dead + 1:
+    case DEAD + 1:
         return 0x7f7f7f;
-    case dead + 2:
+    case DEAD + 2:
         return 0x999999;
     default: // empty
         return 0xFFFFFF;
@@ -95,7 +99,7 @@ int dense_non_sparse(uint32_t *pixels, size_t width, size_t height)
 int raw_render(uint32_t *pixels, uint32_t width, uint32_t height)
 {
     while (true) {
-        if (read_buff(pixels, width * height * 4) == -1) {
+        if (read_buff((uint8_t *) pixels, width * height * 4) == -1) {
             return -1;
         }
         render_frame(pixels, width, height);
